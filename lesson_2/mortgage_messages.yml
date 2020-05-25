@@ -1,0 +1,12 @@
+en:
+  welcome: "<< MORTGAGE CALCULATOR >>
+            \nIn order to calculate your projected monthly 
+            mortgage payment, we will need to gather 3 pieces 
+            of information."
+  loan_amount: "What is the loan amount? ($X.XX)"
+  annual_rate: "What is the Annual Percentage Rate? (%)"
+  loan_years: "What the loan duration in years?"
+  invalid_num: "That's an invalid input. Try again."
+  calculating: "Calculating! Please wait..."
+  again: "Do you want to do another mortgage calculation? (Y to calculate again)"
+  thanks: "Thank you for using the Mortgage Calculator!"

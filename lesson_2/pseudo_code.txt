@@ -1,0 +1,87 @@
+Ex.1 - a method that returns the sum of two integers
+
+*** casual ***
+Ask for two integers.
+Add the two integers.
+Return the result of the sum.
+
+*** formal ***
+START
+
+GET first integer
+SET num1 = first integer
+
+GET second integer
+SET num2 = second integer
+
+SET result = num1 + num2
+
+PRINT result
+
+END
+
+-----------------------------------------------
+
+Ex.2 - a method that takes an array of strings, and returns a 
+string that is all those strings concatenated together.
+
+*** casual ***
+Given  an array of strings.
+
+Assign an empty string to result as starting value.
+
+Iterate through the array of strings one by one.
+ - concatenate the string to result 
+
+After iterating through the array, return the result.
+
+*** formal ***
+START
+
+# Given an array of strings called "strings"
+
+SET iterator = 1
+SET result = empty string
+
+WHILE iterator <= length of strings array
+  result += value within strings array at index "iterator"
+  iterator += 1
+
+PRINT result
+
+END
+
+-----------------------------------------------
+
+Ex.3 - a method that takes an array of integers, and returns a 
+new array with every other element.
+
+*** casual ***
+Given an array of integers.
+
+Iterate through the array of integers one by one.
+ - save current value into new array for all odd iterations
+
+After iterating through the array, return the new array.
+
+*** formal ***
+START
+
+# Given an array of integers called "numbers"
+
+SET iterator = 1
+SET result = empty array
+
+WHILE iterator <= length of numbers array
+  SET current_value = value within numbers collection at space "iterator"
+  
+  IF iterator is odd
+    result << current_value
+  ELSE
+    go to the next iteration
+  
+  iterator += 1
+
+PRINT result
+
+END
