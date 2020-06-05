@@ -21,6 +21,15 @@ def prompt(msg)
   puts "=> #{msg}"
 end
 
+def who_gets_first_move?
+  if FIRST_MOVE.key(true) == "Choose"
+    prompt "Do you want to go first? (y or n)"
+    gets.downcase.start_with?("y") ? "Player" : "Computer"
+  else
+    FIRST_MOVE.key(true)
+  end
+end
+
 def display_ui(round, brd)
   system 'clear'
   puts "<< TIC-TAC-TOE >>"
@@ -83,11 +92,7 @@ def joinor(arr, separator=", ", last_sep="or")
 end
 
 def place_piece!(brd, current_player)
-  if current_player == "Player"
-    player_moves!(brd)
-  else
-    computer_moves!(brd)
-  end
+  current_player == "Player" ? player_moves!(brd) : computer_moves!(brd)
 end
 
 def player_moves!(brd)
@@ -203,12 +208,7 @@ end
 system 'clear'
 prompt "Welcome to Tic-Tac-Toe!\n\n"
 
-if FIRST_MOVE.key(true) == "Choose"
-  prompt "Do you want to go first? (y or n)"
-  current_player = gets.downcase.start_with?("y") ? "Player" : "Computer"
-else
-  current_player = FIRST_MOVE.key(true)
-end
+current_player = who_gets_first_move?
 
 prompt "RULES:\n
     #{current_player} will make the first move.
