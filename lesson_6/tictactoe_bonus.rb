@@ -1,55 +1,74 @@
-require 'pry'
-require 'pry-byebug'
-
 INITIAL_MARKER = " "
 PLAYER_MARKER = "X"
 COMP_MARKER = "O"
 
-# Default setting for determining first-move
 FIRST_MOVE = { "Player" => false,
                "Computer" => false,
                "Choose" => true }
 
-WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
-                [[1, 4, 7], [2, 5, 8], [3, 6, 9]] + # columns
-                [[1, 5, 9], [3, 5, 7]]              # diagonals
-
-SCORES = { "Player" => 0,
-           "Computer" => 0 }
+WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] +
+                [[1, 4, 7], [2, 5, 8], [3, 6, 9]] +
+                [[1, 5, 9], [3, 5, 7]]
 
 def prompt(msg)
   puts "=> #{msg}"
 end
 
+def valid_integer?(str)
+  str.to_i.to_s == str && str.to_i > 0
+end
+
+def how_many_wins?
+  wins = ""
+  loop do
+    prompt "Please set the number of wins for championship: "
+    wins = gets.chomp
+
+    break if valid_integer?(wins)
+    prompt "Sorry, that's not a valid input."
+  end
+
+  wins.to_i
+end
+
 def who_gets_first_move?
   if FIRST_MOVE.key(true) == "Choose"
-    prompt "Do you want to go first? (y or n)"
-    gets.downcase.start_with?("y") ? "Player" : "Computer"
+    loop do
+      prompt "Do you want to go first? (y or n)"
+      ans = gets.downcase
+      if ans.start_with?("y")
+        return "Player"
+      elsif ans.start_with?("n")
+        return "Computer"
+      end
+      prompt "Invalid input"
+    end
   else
     FIRST_MOVE.key(true)
   end
 end
 
-def display_ui(round, brd)
+def display_ui(round, scores, brd)
   system 'clear'
   puts "<< TIC-TAC-TOE >>"
   puts ""
-  score_board(round)
+  score_board(round, scores)
   puts ""
   display_board(brd)
   puts ""
 end
 
 # rubocop:disable Metrics/AbcSize
-def score_board(round)
+def score_board(round, scores)
   padstr = 10
-  puts "*" * (padstr * 2 + 1)
+  divider = "*" * (padstr * 2 + 1)
+  puts divider
   puts "ROUND #{round}".center(padstr * 2 + 1)
-  puts "*" * (padstr * 2 + 1)
+  puts divider
   puts "PLAYER".center(padstr) + " " + "COMPUTER".center(padstr)
-  puts  SCORES["Player"].to_s.center(padstr) + ":" +
-        SCORES["Computer"].to_s.center(padstr)
-  puts "*" * (padstr * 2 + 1)
+  puts  scores["Player"].to_s.center(padstr) + ":" +
+        scores["Computer"].to_s.center(padstr)
+  puts divider
 end
 # rubocop:enable Metrics/AbcSize
 
@@ -99,12 +118,14 @@ def player_moves!(brd)
   square = ""
   loop do
     prompt "Choose a square: #{joinor(empty_squares(brd))}"
-    square = gets.chomp.to_i
-    break if empty_squares(brd).include?(square)
+    square = gets.chomp
+    if valid_integer?(square)
+      break if empty_squares(brd).include?(square.to_i)
+    end
     prompt "Sorry, that's not a valid choice."
   end
 
-  brd[square] = PLAYER_MARKER
+  brd[square.to_i] = PLAYER_MARKER
 end
 
 def computer_moves!(brd)
@@ -128,16 +149,13 @@ def detect_opportunity?(brd)
 end
 
 def strategy(brd, marker)
-  # Select combos that have 1 square unmarked, and 2 squares
-  # marked by marker.
   potential_wins =
     WINNING_LINES.select do |line|
-      (line.difference(empty_squares(brd)).size == 2) &&
+      ((line & empty_squares(brd)).size == 1) &&
         (brd.values_at(*line).count(marker) == 2)
     end
 
-  # Compile choices
-  choices = potential_wins.flatten.intersection(empty_squares(brd))
+  choices = potential_wins.flatten & empty_squares(brd)
 
   choices.sample
 end
@@ -155,90 +173,91 @@ def board_full?(brd)
 end
 
 def someone_won?(brd)
-  !!detect_winner(brd) # want to return true boolean
+  !!detect_winner(brd)
 end
 
 def detect_winner(brd)
   WINNING_LINES.each do |line|
-    if brd.values_at(*line).count(PLAYER_MARKER) == 3
-      return "Player"
-    elsif brd.values_at(*line).count(COMP_MARKER) == 3
-      return "Computer"
-    end
-
-    # Which is preferred? The solution above, or the code below?
-    # if line.all? { |num| brd[num] == PLAYER_MARKER }
-    #   return "Player"
-    # elsif line.all? { |num| brd[num] == COMP_MARKER }
-    #   return "Computer"
-    # end
+    return "Player" if three_in_a_row?(brd, line, PLAYER_MARKER)
+    return "Computer" if three_in_a_row?(brd, line, COMP_MARKER)
   end
   nil
 end
 
-def track_scores(winner)
-  SCORES[winner] += 1
+def three_in_a_row?(brd, line, marker)
+  brd.values_at(*line).count(marker) == 3
 end
 
-def calculate_result(brd)
-  if someone_won?(brd)
-    winner = detect_winner(brd)
-    track_scores(winner)
-    "#{winner} won!"
-  else
-    "It's a tie!"
-  end
+def update_scores(scores, winner)
+  scores[winner] += 1
 end
 
 def continue?
-  prompt "Press any key to continue..."
-  !!STDIN.getch
+  prompt "Press enter to continue..."
+  gets
 end
 
-def someone_won_5_rounds?
-  !!detect_grand_winner
+def match_ended?(scores, championship)
+  !!detect_champion(scores, championship)
 end
 
-def detect_grand_winner
-  SCORES.key(5)
+def detect_champion(scores, championship)
+  scores.key(championship)
 end
 
-# Main
-# Start game
-system 'clear'
-prompt "Welcome to Tic-Tac-Toe!\n\n"
+def play_again?
+  prompt "Do you want to play again? (y or n)"
+  gets.chomp.downcase.start_with?("y")
+end
 
-current_player = who_gets_first_move?
-
-prompt "RULES:\n
-    #{current_player} will make the first move.
-    First player to win 5 rounds is the grand winner.\n\n"
-
-continue?
-
-# Game loop
-round = 0
 loop do
-  round += 1
-  board = initialize_board
+  system 'clear'
+  prompt "Welcome to Tic-Tac-Toe!\n\n"
 
-  loop do
-    display_ui(round, board)
-    place_piece!(board, current_player)
-    current_player = alternate_player(current_player)
-    break if someone_won?(board) || board_full?(board)
-  end
+  championship = how_many_wins?
+  current_player = who_gets_first_move?
 
-  result = calculate_result(board)
-
-  display_ui(round, board)
-  prompt result
-
-  break if someone_won_5_rounds?
+  msg = "RULES:\n
+        #{current_player} will make the first move.
+        First player to win #{championship} round" +
+        (championship > 1 ? "s" : "") + " is the champion.\n\n"
+  prompt msg
 
   continue?
+
+  scores = {  "Player" => 0,
+              "Computer" => 0 }
+
+  round = 0
+  loop do
+    round += 1
+    board = initialize_board
+
+    loop do
+      display_ui(round, scores, board)
+      place_piece!(board, current_player)
+      current_player = alternate_player(current_player)
+      break if someone_won?(board) || board_full?(board)
+    end
+
+    if someone_won?(board)
+      winner = detect_winner(board)
+      update_scores(scores, winner)
+      result = "#{winner} won!"
+    else
+      result = "It's a tie!"
+    end
+
+    display_ui(round, scores, board)
+    prompt result
+
+    break if match_ended?(scores, championship)
+
+    continue?
+  end
+
+  prompt "#{detect_champion(scores, championship)} is the champion!"
+  break unless play_again?
 end
 
-# End game
-prompt "#{detect_grand_winner} is the grand winner!"
 prompt "Thanks for playing Tic-Tac-Toe! Goodbye!"
