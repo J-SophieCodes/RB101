@@ -89,15 +89,15 @@ def player_play(deck, player_hand, dealer_card)
     end
 
     break if busted?(player_hand)
-    
+
     input = ""
     loop do
       prompt "Hit (h) or stay (s)?"
       input = gets.downcase
-      break unless "hit,stay".include?(input)
+      break if input.start_with?("h", "s")
       prompt "Invalid input."
     end
-    
+
     break if input.start_with?("s")
 
     deal(deck, player_hand, 1)
@@ -105,7 +105,6 @@ def player_play(deck, player_hand, dealer_card)
 end
 # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
-# rubocop:disable Metrics/MethodLength
 def dealer_play(deck, dealer_hand, player_hand)
   player_points = calculate_max_total(player_hand)
 
@@ -129,7 +128,6 @@ def dealer_play(deck, dealer_hand, player_hand)
     sleep(1)
   end
 end
-# rubocop:enable Metrics/MethodLength
 
 def busted?(hand)
   calculate_min_total(hand) > MAX
