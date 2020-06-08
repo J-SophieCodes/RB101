@@ -58,19 +58,21 @@ def display_ui(round, scores, brd)
   puts ""
 end
 
-# rubocop:disable Metrics/AbcSize
+def align_elements(arr, width, separator)
+  arr.map { |ele| ele.to_s.center(width) }.join(separator)
+end
+
 def score_board(round, scores)
   padstr = 10
-  divider = "*" * (padstr * 2 + 1)
+  total_width = padstr * 2 + 1
+  divider = "*" * total_width
   puts divider
-  puts "ROUND #{round}".center(padstr * 2 + 1)
+  puts "ROUND #{round}".center(total_width)
   puts divider
-  puts "PLAYER".center(padstr) + " " + "COMPUTER".center(padstr)
-  puts  scores["Player"].to_s.center(padstr) + ":" +
-        scores["Computer"].to_s.center(padstr)
+  puts align_elements(scores.keys, padstr, " ")
+  puts align_elements(scores.values, padstr, ":")
   puts divider
 end
-# rubocop:enable Metrics/AbcSize
 
 # rubocop:disable Metrics/AbcSize
 def display_board(brd)
