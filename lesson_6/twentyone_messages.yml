@@ -1,0 +1,11 @@
+en:
+  :welcome :
+  :hit_or_stay : "Would you like to hit (h) or stay (s)?"
+  :invalid : "Invalid input. Please enter 'h' or 's':"
+  :player_busted : "You busted! Dealer wins!"
+  :dealer_busted : "Dealer busted! You win!"
+  :player : "You win!"
+  :dealer : "Dealer wins!"
+  :tie : "It's a tie!"
+  :play_again : "Do you want to play again? (y or n)"
+  :goodbye : "Thanks for playing Twenty-One! Goodbye!"

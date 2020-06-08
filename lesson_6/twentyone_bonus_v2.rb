@@ -1,4 +1,8 @@
 require 'pry'
+require 'yaml'
+
+MESSAGES = YAML.load_file('twentyone_messages.yml')
+LANGUAGE = 'en'
 
 VALUES = {  "2" => 2, "3" => 3, "4" => 4, "5" => 5, "6" => 6,
             "7" => 7, "8" => 8, "9" => 9, "10" => 10, "J" => 10,
@@ -15,8 +19,13 @@ UNICODE = { "Hearts" => "\u2665",
 MAX = 21
 DEALER_THRESHOLD = 17
 
-def prompt(msg)
-  puts "=> #{msg}"
+def messages(key, lang='en')
+  MESSAGES[lang][key]
+end
+
+def prompt(key)
+  message = messages(key, LANGUAGE)
+  puts "=> #{message}"
 end
 
 def clear_screen
@@ -35,10 +44,10 @@ def display_ui(title, totals, hands)
   clear_screen
   puts "<< #{title} >>\n\n"
 
-  prompt "Dealer has: #{totals[:dealer]}"
+  puts "Dealer has: #{totals[:dealer]}"
   display_hand(hands[:dealer])
 
-  prompt "Player has: #{totals[:player]}"
+  puts "Player has: #{totals[:player]}"
   display_hand(hands[:player])
 end
 
@@ -95,10 +104,10 @@ def player_play(deck, totals, hands)
 
     input = ""
     loop do
-      prompt "Hit (h) or stay (s)?"
+      prompt :hit_or_stay
       input = gets.downcase
       break if input.start_with?("h", "s")
-      prompt "Invalid input. Please enter 'h' or 's':"
+      prompt :invalid
     end
 
     if input.start_with?("h")
@@ -169,22 +178,11 @@ def display_result(totals, hands)
 
   result = detect_result(totals)
 
-  case result
-  when :player_busted
-    prompt "You busted! Dealer wins!"
-  when :dealer_busted
-    prompt "Dealer busted! You win!"
-  when :player
-    prompt "You win!"
-  when :dealer
-    prompt "Dealer wins!"
-  when :tie
-    prompt "It's a tie!"
-  end
+  prompt result
 end
 
 def play_again?
-  prompt "Do you want to play again? (y or n)"
+  prompt :play_again
   gets.chomp.downcase.start_with?("y")
 end
 
@@ -214,7 +212,7 @@ loop do
   break unless play_again?
 end
 
-prompt "Thanks for playing Twenty-One! Goodbye!"
+prompt :goodbye
 
 #yml
 #keep scores
