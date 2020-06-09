@@ -23,13 +23,30 @@ def messages(key, lang='en')
   MESSAGES[lang][key]
 end
 
-def prompt(key)
+def prompt(key, precede = "", succeed = "")
   message = messages(key, LANGUAGE)
-  puts "=> #{message}"
+  puts "=> #{precede}#{message}#{succeed}"
 end
 
 def clear_screen
   system 'clear'
+end
+
+def valid_integer?(str)
+  str.to_i.to_s == str && str.to_i > 0
+end
+
+def how_many_wins?
+  wins = ""
+  loop do
+    prompt :how_to_win
+    wins = gets.chomp
+
+    break if valid_integer?(wins)
+    prompt :invalid_number
+  end
+
+  wins.to_i
 end
 
 def initialize_deck
@@ -40,15 +57,33 @@ def initialize_deck
   deck.shuffle
 end
 
-def display_ui(title, totals, hands)
+def display_ui(round, scores, title, totals, hands)
   clear_screen
-  puts "<< #{title} >>\n\n"
+  display_scoreboard(round, scores)
+
+  puts "\n<< #{messages(title)} >>\n\n"
 
   puts "Dealer has: #{totals[:dealer]}"
   display_hand(hands[:dealer])
 
   puts "Player has: #{totals[:player]}"
   display_hand(hands[:player])
+end
+
+def align_elements(arr, width, separator)
+  arr.map { |ele| ele.to_s.upcase.center(width) }.join(separator)
+end
+
+def display_scoreboard(round, scores)
+  padstr = 16
+  total_width = padstr * 2 + 1
+  divider = "*" * total_width
+  puts divider
+  puts "ROUND #{round}".center(total_width)
+  puts divider
+  puts align_elements(scores.keys, padstr, " ")
+  puts align_elements(scores.values, padstr, ":")
+  puts divider
 end
 
 def display_hand(hand)
@@ -98,16 +133,16 @@ def reveal_dealer_card(hidden_card, hands)
   hands[:dealer].unshift(hidden_card)
 end
 
-def player_play(deck, totals, hands)
+def player_play(round, scores, deck, totals, hands)
   loop do
-    display_ui("Player's Turn", totals, hands)
+    display_ui(round, scores, :player_play, totals, hands)
 
     input = ""
     loop do
       prompt :hit_or_stay
       input = gets.downcase
       break if input.start_with?("h", "s")
-      prompt :invalid
+      prompt :invalid_input
     end
 
     if input.start_with?("h")
@@ -119,9 +154,9 @@ def player_play(deck, totals, hands)
   end
 end
 
-def dealer_play(deck, totals, hands)
+def dealer_play(round, scores, deck, totals, hands)
   loop do
-    display_ui("Dealer's Turn", totals, hands)
+    display_ui(round, scores, :dealer_play, totals, hands)
     sleep(1)
 
     break if  totals[:dealer] > totals[:player] ||
@@ -165,20 +200,42 @@ def detect_result(totals)
   elsif totals[:dealer] > MAX
     :dealer_busted
   elsif totals[:dealer] < totals[:player]
-    :player
+    :player_wins
   elsif totals[:dealer] > totals[:player]
-    :dealer
+    :dealer_wins
   else
     :tie
   end
 end
 
-def display_result(totals, hands)
-  display_ui("Result", totals, hands)
-
+def display_result(round, scores, totals, hands)
   result = detect_result(totals)
+  update_scores(scores, result)
 
+  display_ui(round, scores, :result, totals, hands)
   prompt result
+end
+
+def update_scores(scores, result)
+  case result
+  when :player_busted, :dealer_wins
+    scores[:dealer] += 1
+  when :dealer_busted, :player_wins
+    scores[:player] += 1
+  end
+end
+
+def match_ended?(scores, total_wins)
+  !!detect_winner(scores, total_wins)
+end
+
+def detect_winner(scores, total_wins)
+  scores.key(total_wins)
+end
+
+def continue?
+  prompt :continue
+  gets
 end
 
 def play_again?
@@ -187,32 +244,50 @@ def play_again?
 end
 
 loop do
-  deck = initialize_deck
-  hands = { player: [],
-            dealer: [] }
-  totals = { player: 0,
+  clear_screen
+  prompt :welcome
+
+  total_wins = how_many_wins?
+
+  scores = { player: 0,
              dealer: 0 }
 
-  deal(deck, hands[:player], 2)
-  deal(deck, hands[:dealer], 2)
+  round = 0
+  loop do
+    round += 1
 
-  hidden_dealer_card = hide_dealer_card(hands)
-  update_total(:player, totals, hands)
-  update_total(:dealer, totals, hands)
+    deck = initialize_deck
+    hands = { player: [],
+              dealer: [] }
+    totals = { player: 0,
+               dealer: 0 }
 
-  player_play(deck, totals, hands)
+    deal(deck, hands[:player], 2)
+    deal(deck, hands[:dealer], 2)
 
-  reveal_dealer_card(hidden_dealer_card, hands)
-  update_total(:dealer, totals, hands)
+    hidden_dealer_card = hide_dealer_card(hands)
+    update_total(:player, totals, hands)
+    update_total(:dealer, totals, hands)
 
-  dealer_play(deck, totals, hands) unless busted?(totals[:player])
+    player_play(round, scores, deck, totals, hands)
 
-  display_result(totals, hands)
+    reveal_dealer_card(hidden_dealer_card, hands)
+    update_total(:dealer, totals, hands)
+
+    unless busted?(totals[:player])
+      dealer_play(round, scores, deck, totals, hands)
+    end
+
+    display_result(round, scores, totals, hands)
+
+    break if match_ended?(scores, total_wins)
+
+    continue?
+  end
+
+  prompt(:winner, detect_winner(scores, total_wins).capitalize)
 
   break unless play_again?
 end
 
 prompt :goodbye
-
-#yml
-#keep scores
