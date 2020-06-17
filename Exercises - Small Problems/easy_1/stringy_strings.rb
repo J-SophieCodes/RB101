@@ -49,7 +49,7 @@ puts stringy(7) == '1010101'
 # String of alternating 0s and 1s, but starting with 0 instead 
 # of 1.
 
-def stringy(size, start_with = 1)
+def stringy2(size, start_with = 1)
   numbers = []
 
   value_if_even = start_with
@@ -62,3 +62,8 @@ def stringy(size, start_with = 1)
 
   numbers.join
 end
+
+puts stringy2(6)
+puts stringy2(6, 0)
+puts stringy2(9)
+puts stringy2(9, 0)
